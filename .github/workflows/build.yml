@@ -1,0 +1,43 @@
+name: Build NXIC Pico
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y cmake gcc-arm-none-eabi libnewlib-arm-none-eabi
+
+      - name: Checkout Pico SDK
+        uses: actions/checkout@v4
+        with:
+          repository: raspberrypi/pico-sdk
+          path: pico-sdk
+          submodules: recursive
+
+      - name: Configure
+        run: |
+          cmake -S . -B build \
+            -DPICO_SDK_PATH=$GITHUB_WORKSPACE/pico-sdk
+
+      - name: Build
+        run: |
+          cmake --build build -j$(nproc)
+
+      - name: Upload firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: nxic-pico-firmware
+          path: |
+            build/**/*.uf2
+            build/**/*.bin
+            build/**/*.elf
