@@ -8,7 +8,7 @@
 //   USB-A port: D+ = GP12, D- = GP13  (host mode requires removing R13)
 //   WS2812 RGB LED on GP16
 //--------------------------------------------------------------------
-#define PIN_USB_HOST_DP        12
+#define PIN_USB_HOST_DP        2
 #define PIN_WS2812             16
 #define LED_BRIGHTNESS         32   // 0-255
 
