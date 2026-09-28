@@ -42,13 +42,13 @@ static void core1_main(void) {
 //#define WS2812_PIO pio2
 //static uint ws2812_sm;
 
-// static void ws2812_init(void) {
+ static void ws2812_init(void) {
 //     uint offset = pio_add_program(WS2812_PIO, &ws2812_program);
 //     ws2812_sm = pio_claim_unused_sm(WS2812_PIO, true);
 //     ws2812_program_init(WS2812_PIO, ws2812_sm, offset, PIN_WS2812, 800000.0f, false);
-// }
+ }
 
-// void led_set_rgb(uint8_t r, uint8_t g, uint8_t b) {
+ void led_set_rgb(uint8_t r, uint8_t g, uint8_t b) {
 //     static uint32_t last_color = 0xFFFFFFFF;
 //     // The RP2350-USB-A's LED takes RGB byte order (not the usual WS2812 GRB)
 //     uint32_t color = ((uint32_t)r << 16) | ((uint32_t)g << 8) | b;
@@ -58,7 +58,7 @@ static void core1_main(void) {
 //     }
 // }
 
-// static void led_task(void) {
+ static void led_task(void) {
 //     uint32_t ms = to_ms_since_boot(get_absolute_time());
 //     uint8_t bright = g_settings.led_brightness;
 //     uint8_t r = 0, g = 0, b = 0;
@@ -74,7 +74,7 @@ static void core1_main(void) {
 //         }
 //     }
 //     led_set_rgb(r, g, b);
-// }
+ }
 
 // Ctrl+Alt+W reboots into the web configurator
 static void config_chord_task(void) {
