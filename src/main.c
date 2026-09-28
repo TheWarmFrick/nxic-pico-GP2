@@ -56,7 +56,7 @@ static void core1_main(void) {
 //         last_color = color;
 //         pio_sm_put_blocking(WS2812_PIO, ws2812_sm, color << 8u);
 //     }
-// }
+ }
 
  static void led_task(void) {
 //     uint32_t ms = to_ms_since_boot(get_absolute_time());
