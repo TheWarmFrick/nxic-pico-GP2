@@ -147,15 +147,15 @@ static void fill_imu(int16_t imu[3][6]) {
         // ACCEL_REST_SIGN (real controller: +1G on Z when flat)
         float s_a = (accel_mode == 0) ? s : 0.0f;
         float c_a = (accel_mode == 2) ? 0.0f : ((accel_mode == 0) ? c : 1.0f);
-        imu[f][0] = (int16_t)(accel_sign * IMU_AXIS_SIGN_X * lrintf((float)ACCEL_1G * s_a));
+        // 1.0G gravity vector pointing down on Z (controller flat):
+        imu[f][0] = 0;
         imu[f][1] = 0;
-        imu[f][2] = (int16_t)(accel_sign * IMU_AXIS_SIGN_Z * lrintf((float)ACCEL_1G * c_a));
+        imu[f][2] = (int16_t)ACCEL_1G; // +4096 LSB
 
-        // Body angular rate = pitch_rate about Y + yaw_rate about world up.
-        // Positive rotation about +Y (left) is pitch DOWN, hence the minus.
-        imu[f][3] = (int16_t)(IMU_AXIS_SIGN_X * lrintf((float)raw_yaw * s));
-        imu[f][4] = (int16_t)(IMU_AXIS_SIGN_Y * -raw_pitch);
-        imu[f][5] = (int16_t)(IMU_AXIS_SIGN_Z * lrintf((float)raw_yaw * c));
+        // Constant right-turning yaw rate (~30 deg/sec):
+        imu[f][3] = 0;
+        imu[f][4] = 0;
+        imu[f][5] = 2000; // Continuous right yaw rotation
     }
 
     // Guard against float rounding creeping past the limit
@@ -220,6 +220,35 @@ void mapping_get_state(controller_state_t *st) {
     uint16_t ly = axis12(hid_key_down(cfg->key_ls_down), hid_key_down(cfg->key_ls_up));
     uint16_t rx = axis12(hid_key_down(cfg->key_rs_left), hid_key_down(cfg->key_rs_right));
     uint16_t ry = axis12(hid_key_down(cfg->key_rs_down), hid_key_down(cfg->key_rs_up));
+
+    // === TEST: MAP MOUSE MOVEMENTS DIRECTLY TO RIGHT JOYSTICK ===
+    int32_t test_dx, test_dy;
+    hid_mouse_take_deltas(&test_dx, &test_dy);
+
+    static uint16_t current_rx = STICK_CENTER;
+    static uint16_t current_ry = STICK_CENTER;
+    static int hold_timer = 0;
+
+    if (test_dx != 0 || test_dy != 0) {
+        if (test_dx > 1)       current_rx = STICK_MAX; // Full Right
+        else if (test_dx < -1) current_rx = STICK_MIN; // Full Left
+
+        if (test_dy > 1)       current_ry = STICK_MIN; // Full Down
+        else if (test_dy < -1) current_ry = STICK_MAX; // Full Up
+
+        hold_timer = 10; // Hold stick pushed for ~150ms
+    } else if (hold_timer > 0) {
+        hold_timer--;
+    } else {
+        current_rx = STICK_CENTER;
+        current_ry = STICK_CENTER;
+    }
+
+    if (rx == STICK_CENTER) rx = current_rx;
+    if (ry == STICK_CENTER) ry = current_ry;
+
+    pack_stick(&st->stick[0], lx, ly);
+    pack_stick(&st->stick[3], rx, ry);
     pack_stick(&st->stick[0], lx, ly);
     pack_stick(&st->stick[3], rx, ry);
 
