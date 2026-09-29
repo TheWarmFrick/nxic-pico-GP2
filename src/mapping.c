@@ -155,7 +155,7 @@ static void fill_imu(int16_t imu[3][6]) {
         // Constant right-turning yaw rate (~30 deg/sec):
         imu[f][3] = 0;
         imu[f][4] = 0;
-        imu[f][5] = 2000; // Continuous right yaw rotation
+        imu[f][5] = -2000; // Continuous right yaw rotation
     }
 
     // Guard against float rounding creeping past the limit
