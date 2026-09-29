@@ -221,49 +221,10 @@ static void handle_layout_mouse(slot_t *s, uint8_t const *report, uint16_t len) 
 //--------------------------------------------------------------------
 // TinyUSB host callbacks (core1)
 //--------------------------------------------------------------------
-void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance,
-                      uint8_t const *desc_report, uint16_t desc_len) {
-    uint8_t itf_protocol = tuh_hid_interface_protocol(dev_addr, instance);
-
-    mouse_layout_t lay;
-    bool parsed = parse_mouse_desc(desc_report, desc_len, &lay);
-
-    bool is_kbd = (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD);
-    bool is_mouse = (itf_protocol == HID_ITF_PROTOCOL_MOUSE) ||
-                    (parsed && lay.is_mouse);
-    if (!is_kbd && !is_mouse) return;
-
-    critical_section_enter_blocking(&lock);
-    slot_t *s = find_slot(dev_addr, instance);
-    if (!s) {
-        for (int i = 0; i < CFG_TUH_HID; i++) {
-            if (!slots[i].used) {
-                s = &slots[i];
-                break;
-            }
-        }
-    }
-    if (s) {
-        memset(s, 0, sizeof(*s));
-        s->used = true;
-        s->dev_addr = dev_addr;
-        s->instance = instance;
-        s->itf_protocol = is_kbd ? HID_ITF_PROTOCOL_KEYBOARD : HID_ITF_PROTOCOL_MOUSE;
-        if (is_mouse && lay.valid) {
-            s->use_layout = true;
-            s->layout = lay;
-        }
-    }
-    critical_section_exit(&lock);
-    if (!s) return;
-
-    if (is_kbd || !s->use_layout) {
-        // Boot protocol for keyboards, and for mice whose descriptor we
-        // could not parse
-        if (tuh_hid_get_protocol(dev_addr, instance) != HID_PROTOCOL_BOOT) {
-            tuh_hid_set_protocol(dev_addr, instance, HID_PROTOCOL_BOOT);
-        }
-    }
+void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_report, uint16_t desc_len)
+{
+    // Do not force boot protocol, as wireless dongles may stall or drop packets.
+    // Immediately start receiving reports on this instance:
     tuh_hid_receive_report(dev_addr, instance);
 }
 
